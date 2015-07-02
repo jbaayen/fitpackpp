@@ -29,15 +29,21 @@
 
 using namespace fitpackpp;
 
+#ifdef _WIN32
+#define FORTRAN_SYMBOL(S) S
+#else
+#define FORTRAN_SYMBOL(S) S ## _
+#endif
+
 extern "C" {
-	void curfit_(int *iopt, int *m, double *x, double *y, double *w, double *xb, double *xe, int *k, double *s, int *nest, int *n, double *t, double *c, double *fp, double *wrk, int *lwrk, int *iwrk, int *ier);
-	void splev_(double *t, int *n, double *c, int *k, double *x, double *y, int *m, int *e, int *ier);
-	void splder_(double *t, int *n, double *c, int *k, int *nu, double *x, double *y, int *m, int *e, double *wrk, int *ier);
+	void FORTRAN_SYMBOL(curfit)(int *iopt, int *m, double *x, double *y, double *w, double *xb, double *xe, int *k, double *s, int *nest, int *n, double *t, double *c, double *fp, double *wrk, int *lwrk, int *iwrk, int *ier);
+	void FORTRAN_SYMBOL(splev) (double *t, int *n, double *c, int *k, double *x, double *y, int *m, int *e, int *ier);
+	void FORTRAN_SYMBOL(splder)(double *t, int *n, double *c, int *k, int *nu, double *x, double *y, int *m, int *e, double *wrk, int *ier);
 }
 
 /**
  * @brief Constructor
- * @details Construct a B-Spline interpolation the points specified by the list of abscissae x and ordinates y.
+ * @details Construct a B-Spline curve interpolation for the points specified by the list of abscissae x and ordinates y.
  * 
  * @param x Abscissae
  * @param y Ordinates
@@ -78,7 +84,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	int    *iwrk = new int   [nest];
 
 	int ier;
-	curfit_(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
+	FORTRAN_SYMBOL(curfit)(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error fitting B-Spline using curfit(): " << ier;
@@ -114,7 +120,7 @@ double BSplineCurve::eval(double x)
 	int m = 1; // Evaluate a single point
 	int e = 0; // Extrapolate spline outside of domain
 	int ier;
-	splev_(t, &n, c, &k, &x, &y, &m, &e, &ier);
+	FORTRAN_SYMBOL(splev)(t, &n, c, &k, &x, &y, &m, &e, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error evaluating B-Spline using splev() at point " << x << ": " << ier;
@@ -137,7 +143,7 @@ double BSplineCurve::der(double x, int order)
 	int m = 1; // Evaluate a single point
 	int e = 0; // Extrapolate spline outside of domain
 	int ier;
-	splder_(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
+	FORTRAN_SYMBOL(splder)(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error evaluating " << order << "nth B-Spline derivative using splder() at point " << x << ": " << ier;
