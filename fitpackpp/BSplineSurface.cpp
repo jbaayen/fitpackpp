@@ -32,19 +32,23 @@
 using namespace fitpackpp;
 
 #ifdef _WIN32
-#define FORTRAN_SYMBOL(S) S
+#define surfit SURFIT
+#define bispev BISPEV
+#define parder PARDER
 #else
-#define FORTRAN_SYMBOL(S) S ## _
+#define surfit surfit_
+#define bispev bispev_
+#define parder parder_
 #endif
 
 extern "C" {
-	void FORTRAN_SYMBOL(surfit)(int *iopt, int *m, double *x, double *y, double *z, double *w, double *xb, double *xe, double *yb, double *ye, int *kx, int *ky,
-		                        double *s, int *nxest, int *nyest, int *nmax, double *eps, int *nx, double *tx, int *ny, double *ty, double *c, double *fp,
-		                        double *wrk1, int *lwrk1, double *wrk2, int *lwrk2, int *iwrk, int *kwrk, int *ier);
-	void FORTRAN_SYMBOL(bispev)(double *tx, int *nx, double *ty, int *ny, double *c, int *kx, int *ky, double *x, int *mx, double *y, int *my, double *z,
-		                        double *wrk, int *lwrk, int *iwrk, int *kwrk, int *ier);
-	void FORTRAN_SYMBOL(parder)(double *tx, int *nx, double *ty, int *ny, double *c, int *kx, int *ky, int *nux, int *nuy, double *x, int *mx, double *y, int *my,
-		                        double *z, double *wrk, int *lwrk, int *iwrk, int *kwrk, int *ier);
+	void surfit(int *iopt, int *m, double *x, double *y, double *z, double *w, double *xb, double *xe, double *yb, double *ye, int *kx, int *ky,
+		        double *s, int *nxest, int *nyest, int *nmax, double *eps, int *nx, double *tx, int *ny, double *ty, double *c, double *fp,
+		        double *wrk1, int *lwrk1, double *wrk2, int *lwrk2, int *iwrk, int *kwrk, int *ier);
+	void bispev(double *tx, int *nx, double *ty, int *ny, double *c, int *kx, int *ky, double *x, int *mx, double *y, int *my, double *z,
+		        double *wrk, int *lwrk, int *iwrk, int *kwrk, int *ier);
+	void parder(double *tx, int *nx, double *ty, int *ny, double *c, int *kx, int *ky, int *nux, int *nuy, double *x, int *mx, double *y, int *my,
+		        double *z, double *wrk, int *lwrk, int *iwrk, int *kwrk, int *ier);
 }
 
 /**
@@ -102,7 +106,7 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 	double eps = std::numeric_limits<double>::epsilon();
 
 	int ier;
-	FORTRAN_SYMBOL(surfit)(&iopt, &m, (double*) &x[0], (double*) &y[0], (double*) &z[0], w, &x[0], &x[m - 1], &y[0], &y[m - 1], &k, &k, &smoothing, &nest, &nest, &nest, &eps, &nx, tx, &ny, ty, c, &fp, wrk1, &lwrk1, wrk2, &lwrk2, iwrk, &kwrk, &ier);
+	surfit(&iopt, &m, (double*) &x[0], (double*) &y[0], (double*) &z[0], w, &x[0], &x[m - 1], &y[0], &y[m - 1], &k, &k, &smoothing, &nest, &nest, &nest, &eps, &nx, tx, &ny, ty, c, &fp, wrk1, &lwrk1, wrk2, &lwrk2, iwrk, &kwrk, &ier);
 	if (ier >= 10) {
 		std::stringstream s;
 		s << "Error fitting B-Spline surface using surfit(): " << ier;
@@ -143,7 +147,7 @@ double BSplineSurface::eval(double x, double y)
 	int kwrk = 2;
 	int iwrk[2];
 	int ier;
-	FORTRAN_SYMBOL(bispev)(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
+	bispev(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error evaluating B-Spline surface using bispev() at point " << x << ": " << ier;
@@ -170,7 +174,7 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 	int kwrk = 2;
 	int iwrk[2];
 	int ier;
-	FORTRAN_SYMBOL(parder)(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
+	parder(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error evaluating (" << xOrder << ", " << yOrder << ")th partial B-Spline surface derivative using parder() at point " << x << ": " << ier;

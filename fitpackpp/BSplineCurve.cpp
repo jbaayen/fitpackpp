@@ -30,15 +30,19 @@
 using namespace fitpackpp;
 
 #ifdef _WIN32
-#define FORTRAN_SYMBOL(S) S
+#define curfit CURFIT
+#define splev  SPLEV
+#define splder SPLDER
 #else
-#define FORTRAN_SYMBOL(S) S ## _
+#define curfit curfit_
+#define splev  splev_
+#define splder splder_
 #endif
 
 extern "C" {
-	void FORTRAN_SYMBOL(curfit)(int *iopt, int *m, double *x, double *y, double *w, double *xb, double *xe, int *k, double *s, int *nest, int *n, double *t, double *c, double *fp, double *wrk, int *lwrk, int *iwrk, int *ier);
-	void FORTRAN_SYMBOL(splev) (double *t, int *n, double *c, int *k, double *x, double *y, int *m, int *e, int *ier);
-	void FORTRAN_SYMBOL(splder)(double *t, int *n, double *c, int *k, int *nu, double *x, double *y, int *m, int *e, double *wrk, int *ier);
+	void curfit(int *iopt, int *m, double *x, double *y, double *w, double *xb, double *xe, int *k, double *s, int *nest, int *n, double *t, double *c, double *fp, double *wrk, int *lwrk, int *iwrk, int *ier);
+	void splev (double *t, int *n, double *c, int *k, double *x, double *y, int *m, int *e, int *ier);
+	void splder(double *t, int *n, double *c, int *k, int *nu, double *x, double *y, int *m, int *e, double *wrk, int *ier);
 }
 
 /**
@@ -82,7 +86,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	int    *iwrk = new int   [nest];
 
 	int ier;
-	FORTRAN_SYMBOL(curfit)(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
+	curfit(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
 	if (ier >= 10) {
 		std::stringstream s;
 		s << "Error fitting B-Spline curve using curfit(): " << ier;
@@ -118,7 +122,7 @@ double BSplineCurve::eval(double x)
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
 	int ier;
-	FORTRAN_SYMBOL(splev)(t, &n, c, &k, &x, &y, &m, &e, &ier);
+	splev(t, &n, c, &k, &x, &y, &m, &e, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error evaluating B-Spline curve using splev() at point " << x << ": " << ier;
@@ -141,7 +145,7 @@ double BSplineCurve::der(double x, int order)
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
 	int ier;
-	FORTRAN_SYMBOL(splder)(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
+	splder(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
 		std::stringstream s;
 		s << "Error evaluating " << order << "nth B-Spline curve derivative using splder() at point " << x << ": " << ier;
