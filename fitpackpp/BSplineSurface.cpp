@@ -22,6 +22,7 @@
 
 #include <assert.h>
 #include <limits>
+#include <cmath>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
@@ -62,14 +63,14 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 	// Number of data points
 	int m = (int) x.size();
 
-	// The actual degree of the spline must be less than m
+	// Compute feasible spline degree
 	k = preferredDegree;
-	if (k >= m)
-		k = m - 1;
+	if ((k + 1) * (k + 1) > m)
+		k = floor(sqrt(m) - 1);
 
 	// Configure surfit() parameters
-	int iopt = 0;                        // Compute a smoothing spline
-	int nest = m + k + 1;                // Over-estimate the number of knots
+	int iopt = 0;                                     // Compute a smoothing spline
+	int nest = m + k + 1;                             // Over-estimate the number of knots
 
 	// Allocate weighting vector
 	double *w = new double[m];
@@ -77,9 +78,9 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 		w[i] = 1.0;
 
 	// Allocate memory for knots and coefficients
-	tx = new double[nest];               // X knots
-	ty = new double[nest];               // Y knots
-	c  = new double[nest];               // Coefficients
+	tx = new double[nest];                            // X knots
+	ty = new double[nest];                            // Y knots
+	c  = new double[(nest - k - 1) * (nest - k - 1)]; // Coefficients
 
 	double fp; // Weighted sum of squared residuals
 
@@ -102,7 +103,7 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 
 	int ier;
 	FORTRAN_SYMBOL(surfit)(&iopt, &m, (double*) &x[0], (double*) &y[0], (double*) &z[0], w, &x[0], &x[m - 1], &y[0], &y[m - 1], &k, &k, &smoothing, &nest, &nest, &nest, &eps, &nx, tx, &ny, ty, c, &fp, wrk1, &lwrk1, wrk2, &lwrk2, iwrk, &kwrk, &ier);
-	if (ier > 0) {
+	if (ier >= 10) {
 		std::stringstream s;
 		s << "Error fitting B-Spline surface using surfit(): " << ier;
 		throw std::runtime_error(s.str());
@@ -140,7 +141,7 @@ double BSplineSurface::eval(double x, double y)
 	double z;
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
-	int iwrk[kwrk];
+	int iwrk[2];
 	int ier;
 	FORTRAN_SYMBOL(bispev)(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
@@ -167,7 +168,7 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 	double z;
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
-	int iwrk[kwrk];
+	int iwrk[2];
 	int ier;
 	FORTRAN_SYMBOL(parder)(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {

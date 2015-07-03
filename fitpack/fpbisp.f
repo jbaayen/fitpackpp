@@ -1,4 +1,6 @@
       subroutine fpbisp(tx,nx,ty,ny,c,kx,ky,x,mx,y,my,z,wx,wy,lx,ly)
+c++ Jorn Baayen: 3 july 2015
+c++   - disabled clipping x and y values to interval [min(t),max(t)]
 c  ..scalar arguments..
       integer nx,ny,kx,ky,mx,my
 c  ..array arguments..
@@ -21,8 +23,8 @@ c  ..
       l1 = l+1
       do 40 i=1,mx
         arg = x(i)
-        if(arg.lt.tb) arg = tb
-        if(arg.gt.te) arg = te
+c--        if(arg.lt.tb) arg = tb
+c--        if(arg.gt.te) arg = te
   10    if(arg.lt.tx(l1) .or. l.eq.nkx1) go to 20
         l = l1
         l1 = l+1
@@ -41,8 +43,8 @@ c  ..
       l1 = l+1
       do 80 i=1,my
         arg = y(i)
-        if(arg.lt.tb) arg = tb
-        if(arg.gt.te) arg = te
+c--        if(arg.lt.tb) arg = tb
+c--        if(arg.gt.te) arg = te
   50    if(arg.lt.ty(l1) .or. l.eq.nky1) go to 60
         l = l1
         l1 = l+1

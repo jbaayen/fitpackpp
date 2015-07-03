@@ -83,7 +83,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 
 	int ier;
 	FORTRAN_SYMBOL(curfit)(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
-	if (ier > 0) {
+	if (ier >= 10) {
 		std::stringstream s;
 		s << "Error fitting B-Spline curve using curfit(): " << ier;
 		throw std::runtime_error(s.str());
@@ -116,7 +116,7 @@ double BSplineCurve::eval(double x)
 {
 	double y;
 	int m = 1; // Evaluate a single point
-	int e = 1; // Evaluate to zero outside domain
+	int e = 0; // Don't clip argument to range
 	int ier;
 	FORTRAN_SYMBOL(splev)(t, &n, c, &k, &x, &y, &m, &e, &ier);
 	if (ier > 0) {
@@ -139,7 +139,7 @@ double BSplineCurve::der(double x, int order)
 {
 	double y;
 	int m = 1; // Evaluate a single point
-	int e = 1; // Evaluate to zero outside domain
+	int e = 0; // Don't clip argument to range
 	int ier;
 	FORTRAN_SYMBOL(splder)(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
