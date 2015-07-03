@@ -63,9 +63,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 
 	// Configure curfit() parameters
 	int iopt = 0;                       // Compute a smoothing spline
-	int nest = m + k + 1;               // Over-estimate the number of knots, following scipy
-	if (2 * k + 3 > nest)
-		nest = 2 * k + 3; 
+	int nest = m + k + 1;               // Over-estimate the number of knots
 
 	// Allocate weighting vector
 	double *w = new double[m];
@@ -79,7 +77,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	double fp; // Weighted sum of squared residuals
 
 	// Allocate working memory required by curfit
-	int lwrk = (m * (k + 1) + nest * (7 + 3 * k));
+	int     lwrk = (m * (k + 1) + nest * (7 + 3 * k));
 	double *wrk  = new double[lwrk];
 	int    *iwrk = new int   [nest];
 
@@ -87,7 +85,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	FORTRAN_SYMBOL(curfit)(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
-		s << "Error fitting B-Spline using curfit(): " << ier;
+		s << "Error fitting B-Spline curve using curfit(): " << ier;
 		throw std::runtime_error(s.str());
 	}
 
@@ -118,12 +116,12 @@ double BSplineCurve::eval(double x)
 {
 	double y;
 	int m = 1; // Evaluate a single point
-	int e = 0; // Extrapolate spline outside of domain
+	int e = 1; // Evaluate to zero outside domain
 	int ier;
 	FORTRAN_SYMBOL(splev)(t, &n, c, &k, &x, &y, &m, &e, &ier);
 	if (ier > 0) {
 		std::stringstream s;
-		s << "Error evaluating B-Spline using splev() at point " << x << ": " << ier;
+		s << "Error evaluating B-Spline curve using splev() at point " << x << ": " << ier;
 		throw std::runtime_error(s.str());
 	}
 
@@ -141,12 +139,12 @@ double BSplineCurve::der(double x, int order)
 {
 	double y;
 	int m = 1; // Evaluate a single point
-	int e = 0; // Extrapolate spline outside of domain
+	int e = 1; // Evaluate to zero outside domain
 	int ier;
 	FORTRAN_SYMBOL(splder)(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
 		std::stringstream s;
-		s << "Error evaluating " << order << "nth B-Spline derivative using splder() at point " << x << ": " << ier;
+		s << "Error evaluating " << order << "nth B-Spline curve derivative using splder() at point " << x << ": " << ier;
 		throw std::runtime_error(s.str());
 	}
 

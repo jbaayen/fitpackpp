@@ -14,14 +14,14 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 /**
- * @file BSplineCurve.h
+ * @file BSplineSurface.h
  * @author Jorn Baayen
  * @version 1.0
  * @date 2015
  */
 
-#ifndef BSPLINE_CURVE_H
-#define BSPLINE_CURVE_H
+#ifndef BSPLINE_SURFACE_H
+#define BSPLINE_SURFACE_H
 
 #include <vector>
 
@@ -29,28 +29,31 @@ namespace fitpackpp
 {
 
 /**
- * @brief B-Spline curve
- * @details A wrapper for the curfit(), splev(), and splder() routines from FITPACK by  P. Dierckx:
+ * @brief B-Spline surface
+ * @details A wrapper for the surfit(), bispev(), and parder() routines from FITPACK by  P. Dierckx:
  * http://www.netlib.org/fitpack/index.html
  * More specifically, we use the double-precision FITPACK version included with scipy:
  * https://github.com/scipy/scipy/tree/master/scipy/interpolate/fitpack
  */
-class BSplineCurve
+class BSplineSurface
 {
 public:
-	BSplineCurve(std::vector<double> &x, std::vector<double> &y, int preferredDegree=3, double smoothing=0.0);
+	BSplineSurface(std::vector<double> &x, std::vector<double> &y, std::vector<double> &z, int preferredDegree=3, double smoothing=0.0);
 
-	~BSplineCurve();
+	~BSplineSurface();
 
-	double eval(double x);
-	double der(double x, int order=1);
+	double eval(double x, double y);
+	double der(double x, double y, int xOrder, int yOrder);
 
 private:
 	int     k;    // Spline degree
-	int     n;    // Number of knots
-	double *t;    // Knot coordinates
+	int     nx;   // Number of knots in X direction
+	int     ny;   // Number of knots in Y direction
+	double *tx;   // Knot X coordinates
+	double *ty;   // Knot Y coordinates
 	double *c;    // Spline coefficients
-	double *wder; // Working memory for derivative computation
+	int     lwrk; // Working memory for spline (and derivative) evaluation: length
+	double *wrk;  // Working memory for spline (and derivative) evaluation
 };
 
 };
