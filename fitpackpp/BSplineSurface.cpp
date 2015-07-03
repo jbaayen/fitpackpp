@@ -66,7 +66,7 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 	// Compute feasible spline degree
 	k = preferredDegree;
 	if ((k + 1) * (k + 1) > m)
-		k = floor(sqrt(m) - 1);
+		k = (int) floor(sqrt((double) m) - 1);
 
 	// Configure surfit() parameters
 	int iopt = 0;                                     // Compute a smoothing spline
