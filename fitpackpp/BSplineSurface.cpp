@@ -25,6 +25,7 @@
 #include <cmath>
 #include <cstring>
 #include <sstream>
+#include <iostream>
 #include <stdexcept>
 
 #include "BSplineSurface.h"
@@ -61,8 +62,11 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 
 	// Compute feasible spline degree
 	k = preferredDegree;
-	if ((k + 1) * (k + 1) > m)
+	if ((k + 1) * (k + 1) > m) {
 		k = (int) floor(sqrt((double) m) - 1);
+
+		std::cerr << "WARNING:  Too few data points (" << m << ") to create B-Spline surface of order " << preferredDegree << ". Reducing order to " << k << "." << std::endl;
+	}
 
 	// Configure surfit() parameters
 	int iopt = 0;                                     // Compute a smoothing spline
@@ -142,7 +146,7 @@ double BSplineSurface::eval(double x, double y)
 	bispev(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
-		s << "Error evaluating B-Spline surface using bispev() at point " << x << ": " << ier;
+		s << "Error evaluating B-Spline surface using bispev() at point (" << x << ", " << y << "): " << ier;
 		throw std::runtime_error(s.str());
 	}
 
@@ -161,6 +165,12 @@ double BSplineSurface::eval(double x, double y)
  */
 double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 {
+	if (xOrder < 0 || yOrder < 0 || xOrder >= k || yOrder >= k) {
+		std::stringstream s;
+		s << "Cannot evaluate order (" << xOrder << ", " << yOrder << ") derivative of B-Spline surface of order " << k;
+		throw std::runtime_error(s.str());
+	}
+
 	double z;
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
@@ -169,7 +179,7 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 	parder(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
-		s << "Error evaluating (" << xOrder << ", " << yOrder << ")th partial B-Spline surface derivative using parder() at point " << x << ": " << ier;
+		s << "Error evaluating order (" << xOrder << ", " << yOrder << ") partial B-Spline surface derivative using parder() at point (" << x << ", " << y << "): " << ier;
 		throw std::runtime_error(s.str());
 	}
 

@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <cstring>
 #include <sstream>
+#include <iostream>
 #include <stdexcept>
 
 #include "BSplineCurve.h"
@@ -54,8 +55,11 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 
 	// The actual degree of the spline must be less than m
 	k = preferredDegree;
-	if (k >= m)
+	if (k >= m) {
 		k = m - 1;
+
+		std::cerr << "WARNING:  Too few data points (" << m << ") to create B-Spline curve of order " << preferredDegree << ". Reducing order to " << k << "." << std::endl;
+	}
 
 	// Configure curfit() parameters
 	int iopt = 0;                       // Compute a smoothing spline
@@ -133,6 +137,12 @@ double BSplineCurve::eval(double x)
  */
 double BSplineCurve::der(double x, int order)
 {
+	if (order < 0 || order >= k) {
+		std::stringstream s;
+		s << "Cannot evaluate order " << order << " derivative of B-Spline curve of order " << k;
+		throw std::runtime_error(s.str());
+	}
+
 	double y;
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
@@ -140,7 +150,7 @@ double BSplineCurve::der(double x, int order)
 	splder(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
 		std::stringstream s;
-		s << "Error evaluating " << order << "nth B-Spline curve derivative using splder() at point " << x << ": " << ier;
+		s << "Error evaluating order " << order << " B-Spline curve derivative using splder() at point " << x << ": " << ier;
 		throw std::runtime_error(s.str());
 	}
 
