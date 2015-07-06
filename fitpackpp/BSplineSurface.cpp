@@ -29,17 +29,9 @@
 
 #include "BSplineSurface.h"
 
-using namespace fitpackpp;
+#include "FCMangle.h"
 
-#ifdef _WIN32
-#define surfit SURFIT
-#define bispev BISPEV
-#define parder PARDER
-#else
-#define surfit surfit_
-#define bispev bispev_
-#define parder parder_
-#endif
+using namespace fitpackpp;
 
 extern "C" {
 	void surfit(int *iopt, int *m, double *x, double *y, double *z, double *w, double *xb, double *xe, double *yb, double *ye, int *kx, int *ky,

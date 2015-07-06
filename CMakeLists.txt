@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.0.0)
+
+# FITPACK FORTRAN code
 enable_language(Fortran)
 
 set(fitpack_SRC
@@ -28,11 +31,21 @@ add_library(fitpack STATIC
 
 enable_language(CXX)
 
+# C++ interface
+include(FortranCInterface)
+FortranCInterface_HEADER(FCMangle.h
+                         MACRO_NAMESPACE "FC_"
+                         SYMBOL_NAMESPACE ""
+                         SYMBOLS curfit splev splder surfit bispev parder)
+FortranCInterface_VERIFY(CXX)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 set(fitpackpp_SRC
 	fitpackpp/BSplineCurve.cpp
     fitpackpp/BSplineSurface.cpp)
 
-add_library(fitpackpp SHARED
+add_library(fitpackpp STATIC
 	        ${fitpackpp_SRC})
 
 target_link_libraries(fitpackpp fitpack)

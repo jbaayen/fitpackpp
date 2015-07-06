@@ -27,17 +27,9 @@
 
 #include "BSplineCurve.h"
 
-using namespace fitpackpp;
+#include "FCMangle.h"
 
-#ifdef _WIN32
-#define curfit CURFIT
-#define splev  SPLEV
-#define splder SPLDER
-#else
-#define curfit curfit_
-#define splev  splev_
-#define splder splder_
-#endif
+using namespace fitpackpp;
 
 extern "C" {
 	void curfit(int *iopt, int *m, double *x, double *y, double *w, double *xb, double *xe, int *k, double *s, int *nest, int *n, double *t, double *c, double *fp, double *wrk, int *lwrk, int *iwrk, int *ier);
