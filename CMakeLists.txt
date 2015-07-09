@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.0.0)
 # FITPACK FORTRAN code
 enable_language(Fortran)
 
+if(${CMAKE_Fortran_COMPILER} MATCHES "ifort.*")
+    set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS} -fltconsistency")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS} -fltconsistency")
+endif()
+
 set(fitpack_SRC
     fitpack/bispev.f
     fitpack/curfit.f
