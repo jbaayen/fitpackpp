@@ -67,21 +67,26 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 
 	// Allocate weighting vector
 	double *w = new double[m];
-	for (int i = 0; i < m; i++)
-		w[i] = 1.0;
+	std::fill(w, w + m, 1.0);
 
 	// Allocate memory for knots and coefficients
 	t = new double[nest];               // Knots
-	c = new double[nest];               // Coefficients
+	std::fill(t, t + nest, 0.0);
 
-	double fp; // Weighted sum of squared residuals
+	c = new double[nest];               // Coefficients
+	std::fill(c, c + nest, 0.0);
+
+	double fp = 0.0; // Weighted sum of squared residuals
 
 	// Allocate working memory required by curfit
 	int     lwrk = (m * (k + 1) + nest * (7 + 3 * k));
 	double *wrk  = new double[lwrk];
-	int    *iwrk = new int   [nest];
+	std::fill(wrk, wrk + lwrk, 0.0);
 
-	int ier;
+	int    *iwrk = new int   [nest];
+	std::fill(iwrk, iwrk + nest, 0);
+
+	int ier = 0;
 	curfit(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
 	if (ier >= 10) {
 		std::stringstream s;
@@ -95,7 +100,7 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	delete[] iwrk;
 
 	// Allocate work vector for derivative computation
-	wder = new double[n]; 
+	wder = new double[n];
 }
 
 BSplineCurve::~BSplineCurve(void)
@@ -114,10 +119,10 @@ BSplineCurve::~BSplineCurve(void)
  */
 double BSplineCurve::eval(double x)
 {
-	double y;
+	double y = 0.0;
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
-	int ier;
+	int ier = 0;
 	splev(t, &n, c, &k, &x, &y, &m, &e, &ier);
 	if (ier > 0) {
 		std::stringstream s;
@@ -143,10 +148,12 @@ double BSplineCurve::der(double x, int order)
 		throw std::runtime_error(s.str());
 	}
 
-	double y;
+	std::fill(wder, wder + n, 0.0);
+
+	double y = 0.0;
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
-	int ier;
+	int ier = 0;
 	splder(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
 		std::stringstream s;

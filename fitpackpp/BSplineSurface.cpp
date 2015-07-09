@@ -74,15 +74,20 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 
 	// Allocate weighting vector
 	double *w = new double[m];
-	for (int i = 0; i < m; i++)
-		w[i] = 1.0;
-
+	std::fill(w, w + m, 1.0);
+	
 	// Allocate memory for knots and coefficients
 	tx = new double[nest];                            // X knots
-	ty = new double[nest];                            // Y knots
-	c  = new double[(nest - k - 1) * (nest - k - 1)]; // Coefficients
+	std::fill(tx, tx + nest, 0.0);
 
-	double fp; // Weighted sum of squared residuals
+	ty = new double[nest];                            // Y knots
+	std::fill(ty, ty + nest, 0.0);
+
+	int lc = (nest - k - 1) * (nest - k - 1);
+	c = new double[lc];                               // Coefficients
+	std::fill(c, c + lc, 0.0);
+
+	double fp = 0.0; // Weighted sum of squared residuals
 
 	// Allocate working memory required by surfit
 	int  u = nest - k - 1;
@@ -92,16 +97,19 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 
 	int     lwrk1 = u * u * (2 + b1 + b2) + 2 * (u + u + km * (m + nest) + nest - k - k) + b2 + 1;
 	double *wrk1  = new double[lwrk1];
+	std::fill(wrk1, wrk1 + lwrk1, 0.0);
 
 	int     lwrk2 = u * u * (b2 + 1) + b2;
 	double *wrk2  = new double[lwrk2];
+	std::fill(wrk2, wrk2 + lwrk2, 0.0);
 
 	int     kwrk  = m + (nest - 2 * k - 1) * (nest - 2 * k - 1);
 	int    *iwrk  = new int   [kwrk];
+	std::fill(iwrk, iwrk + kwrk, 0);
 
 	double eps = std::numeric_limits<double>::epsilon();
 
-	int ier;
+	int ier = 0;
 	surfit(&iopt, &m, (double*) &x[0], (double*) &y[0], (double*) &z[0], w, &x[0], &x[m - 1], &y[0], &y[m - 1], &k, &k, &smoothing, &nest, &nest, &nest, &eps, &nx, tx, &ny, ty, c, &fp, wrk1, &lwrk1, wrk2, &lwrk2, iwrk, &kwrk, &ier);
 	if (ier >= 10) {
 		std::stringstream s;
@@ -138,11 +146,13 @@ BSplineSurface::~BSplineSurface(void)
  */
 double BSplineSurface::eval(double x, double y)
 {
-	double z;
+	std::fill(wrk, wrk + lwrk, 0.0);
+
+	double z = 0.0;
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
 	int iwrk[2];
-	int ier;
+	int ier = 0;
 	bispev(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
@@ -171,11 +181,13 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 		throw std::runtime_error(s.str());
 	}
 
-	double z;
+	std::fill(wrk, wrk + lwrk, 0.0);
+
+	double z = 0.0;
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
 	int iwrk[2];
-	int ier;
+	int ier = 0;
 	parder(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
 		std::stringstream s;
