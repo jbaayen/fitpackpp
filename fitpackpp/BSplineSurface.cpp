@@ -152,6 +152,8 @@ double BSplineSurface::eval(double x, double y)
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
 	int iwrk[2];
+	std::fill(iwrk, iwrk + kwrk, 0);
+	
 	int ier = 0;
 	bispev(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
@@ -187,6 +189,8 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 	int m = 1; // Evaluate a single point
 	int kwrk = 2;
 	int iwrk[2];
+	std::fill(iwrk, iwrk + kwrk, 0);
+
 	int ier = 0;
 	parder(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
