@@ -102,9 +102,6 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	delete[] w;
 	delete[] wrk;
 	delete[] iwrk;
-
-	// Allocate work vector for derivative computation
-	wder = new double[n];
 }
 
 BSplineCurve::~BSplineCurve(void)
@@ -112,7 +109,6 @@ BSplineCurve::~BSplineCurve(void)
 	// Free memory
 	delete[] t;
 	delete[] c;
-	delete[] wder;
 }
 
 /**
@@ -152,6 +148,8 @@ double BSplineCurve::der(double x, int order)
 		throw std::runtime_error(s.str());
 	}
 
+	// Allocate working memory on the stack to keep this function thread-safe
+	double *wder = (double*) alloca(sizeof(double) * n);
 	std::fill(wder, wder + n, 0.0);
 
 	double y = 0.0;

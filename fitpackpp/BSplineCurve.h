@@ -46,11 +46,10 @@ public:
 	double der(double x, int order=1);
 
 private:
-	int     k;    // Spline degree
-	int     n;    // Number of knots
-	double *t;    // Knot coordinates
-	double *c;    // Spline coefficients
-	double *wder; // Working memory for derivative computation
+	int     k; // Spline degree
+	int     n; // Number of knots
+	double *t; // Knot coordinates
+	double *c; // Spline coefficients
 };
 
 };

@@ -127,9 +127,8 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 	delete[] wrk2;
 	delete[] iwrk;
 
-	// Allocate work vectors for spline (and derivative) evaluation
+	// Determine working memory size
 	lwrk = 2 * (k + 1) + (nx - k - 1) * (ny - k - 1);
-	wrk  = new double[lwrk];
 }
 
 BSplineSurface::~BSplineSurface(void)
@@ -138,7 +137,6 @@ BSplineSurface::~BSplineSurface(void)
 	delete[] tx;
 	delete[] ty;
 	delete[] c;
-	delete[] wrk;
 }
 
 /**
@@ -150,6 +148,8 @@ BSplineSurface::~BSplineSurface(void)
  */
 double BSplineSurface::eval(double x, double y)
 {
+	// Allocate working memory on the stack to keep this function thread-safe
+	double *wrk  = (double*)alloca(sizeof(double) * lwrk);
 	std::fill(wrk, wrk + lwrk, 0.0);
 
 	double z = 0.0;
@@ -187,6 +187,8 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 		throw std::runtime_error(s.str());
 	}
 
+	// Allocate working memory on the stack to keep this function thread-safe
+	double *wrk  = (double*)alloca(sizeof(double) * lwrk);
 	std::fill(wrk, wrk + lwrk, 0.0);
 
 	double z = 0.0;

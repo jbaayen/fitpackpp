@@ -53,7 +53,6 @@ private:
 	double *ty;   // Knot Y coordinates
 	double *c;    // Spline coefficients
 	int     lwrk; // Working memory for spline (and derivative) evaluation: length
-	double *wrk;  // Working memory for spline (and derivative) evaluation
 };
 
 };
