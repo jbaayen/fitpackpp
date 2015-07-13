@@ -88,10 +88,14 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 
 	int ier = 0;
 	curfit(&iopt, &m, (double*) &x[0], (double*) &y[0], w, &x[0], &x[m - 1], &k, &smoothing, &nest, &n, t, c, &fp, wrk, &lwrk, iwrk, &ier);
-	if (ier >= 10) {
-		std::stringstream s;
-		s << "Error fitting B-Spline curve using curfit(): " << ier;
-		throw std::runtime_error(s.str());
+	if (ier > 0) {
+		if (ier >= 10) {
+			std::stringstream s;
+			s << "Error fitting B-Spline curve using curfit(): " << ier;
+			throw std::runtime_error(s.str());
+		} else {
+			std::cerr << "WARNING:  Non-fatal error while fitting B-Spline curve using curfit(): " << ier << std::endl;
+		}
 	}
 
 	// De-allocate temporary memory

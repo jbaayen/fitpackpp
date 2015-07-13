@@ -111,10 +111,14 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 
 	int ier = 0;
 	surfit(&iopt, &m, (double*) &x[0], (double*) &y[0], (double*) &z[0], w, &x[0], &x[m - 1], &y[0], &y[m - 1], &k, &k, &smoothing, &nest, &nest, &nest, &eps, &nx, tx, &ny, ty, c, &fp, wrk1, &lwrk1, wrk2, &lwrk2, iwrk, &kwrk, &ier);
-	if (ier >= 10) {
-		std::stringstream s;
-		s << "Error fitting B-Spline surface using surfit(): " << ier;
-		throw std::runtime_error(s.str());
+	if (ier > 0) {
+		if (ier >= 10) {
+			std::stringstream s;
+			s << "Error fitting B-Spline surface using surfit(): " << ier;
+			throw std::runtime_error(s.str());
+		} else {
+			std::cerr << "WARNING:  Non-fatal error while fitting B-Spline surface using surfit(): " << ier << std::endl;
+		}
 	}
 
 	// De-allocate temporary memory
