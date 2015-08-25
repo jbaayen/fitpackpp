@@ -26,7 +26,9 @@
 #include <cstring>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
+#include <ios>
 
 #include "BSplineSurface.h"
 
@@ -131,12 +133,160 @@ BSplineSurface::BSplineSurface(std::vector<double> &x, std::vector<double> &y, s
 	lwrk = 2 * (k + 1) + (nx - k - 1) * (ny - k - 1);
 }
 
+/**
+ * @brief Constructor
+ * @details Construct a B-Spline surface interpolation for the given knots and coefficients.
+ * 
+ * @param knotX Knot X coordinates
+ * @param knotY Knot Y coordinates
+ * @param coefs B-Spline coefficients
+ * @param degree Preferred degree of the interpolating spline. 
+ */
+BSplineSurface::BSplineSurface(std::vector<double> &knotX, std::vector<double> &knotY, std::vector<double> &coefs, int degree)
+{
+	// Store parameters
+	k = degree;
+
+	nx = (int) knotX.size();
+	ny = (int) knotY.size();
+
+	tx = new double[knotX.size()];
+	std::copy(knotX.begin(), knotX.end(), tx);
+
+	ty = new double[knotY.size()];
+	std::copy(knotY.begin(), knotY.end(), ty);
+
+	c = new double[coefs.size()];
+	std::copy(coefs.begin(), coefs.end(), c);
+
+	// Determine working memory size
+	lwrk = 2 * (k + 1) + (nx - k - 1) * (ny - k - 1);
+}
+
+/**
+ * @brief Constructor
+ * @details Construct a B-Spline surface interpolation from a previously serialized BSplineSurface object
+ * 
+ * @param filename File to load 
+ */
+BSplineSurface::BSplineSurface(const std::string &filename)
+{
+	std::ifstream f;
+	f.open(filename, std::ios::binary);
+	if (!f.good()) {
+		std::stringstream s;
+		s << "Failed to open B-Spline surface cache file: " << filename;
+		throw std::runtime_error(s.str());
+	}
+
+	// Read spline from cache
+	f.read((char*) &nx, sizeof(int));
+	tx = new double[nx];
+	for (int i = 0; i < nx; i++) {
+		f.read((char*) &tx[i], sizeof(double));
+	}
+
+	f.read((char*) &ny, sizeof(int));
+	ty = new double[ny];
+	for (int i = 0; i < ny; i++) {
+		f.read((char*) &ty[i], sizeof(double));
+	}
+
+	int nc;
+	f.read((char*) &nc, sizeof(int));
+	c = new double[nc];
+	for (int i = 0; i < nc; i++) {
+		f.read((char*) &c[i], sizeof(double));
+	}
+
+	f.read((char*) &k, sizeof(int));
+
+	f.close();
+
+	// Determine working memory size
+	lwrk = 2 * (k + 1) + (nx - k - 1) * (ny - k - 1);
+}
+
 BSplineSurface::~BSplineSurface(void)
 {
 	// Free memory
 	delete[] tx;
 	delete[] ty;
 	delete[] c;
+}
+
+/**
+ * @brief Knot X coordinates
+ * @return Knot X coordinates
+ */
+std::vector<double> BSplineSurface::knotX() 
+{
+	std::vector<double> knotX;
+	knotX.assign(tx, tx + nx);
+	return knotX;
+}
+
+/**
+ * @brief Knot Y coordinates
+ * @return Knot Y coordinates
+ */
+std::vector<double> BSplineSurface::knotY() 
+{
+	std::vector<double> knotY;
+	knotY.assign(ty, ty + ny);
+	return knotY;
+}
+
+/**
+ * @brief Coefficients
+ * @return Coefficients
+ */
+std::vector<double> BSplineSurface::coefs() 
+{
+	int nc = (nx - k - 1) * (ny - k - 1);
+	std::vector<double> coefs;
+	coefs.assign(c, c + nc);
+	return coefs;
+}
+
+/**
+ * @brief Degree
+ * @return Degree
+ */
+int BSplineSurface::degree()
+{
+	return k;
+}
+
+/**
+ * @brief Serialize the BSplineSurface object
+ * 
+ * @param filename Destination file
+ */
+void BSplineSurface::serialize(const std::string &filename)
+{
+	std::ofstream f;
+	f.open(filename, std::ios::binary);
+
+	f.write((char*) &nx, sizeof(int));
+	for (int i = 0; i < nx; i++) {
+		f.write((char*) &tx[i], sizeof(double));
+	}
+
+	f.write((char*) &ny, sizeof(int));
+	for (int i = 0; i < ny; i++) {
+		f.write((char*) &ty[i], sizeof(double));
+	}
+
+	int nc = (nx - k - 1) * (ny - k - 1);
+	f.write((char*) &nc, sizeof(int));
+	for (int i = 0; i < nc; i++) {
+		f.write((char*) &c[i], sizeof(double));
+	}
+
+	f.write((char*) &k, sizeof(int));
+
+	f.close();
 }
 
 /**

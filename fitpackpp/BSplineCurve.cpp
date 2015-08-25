@@ -24,7 +24,9 @@
 #include <cstring>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <stdexcept>
+#include <ios>
 
 #include "BSplineCurve.h"
 
@@ -104,11 +106,124 @@ BSplineCurve::BSplineCurve(std::vector<double> &x, std::vector<double> &y, int p
 	delete[] iwrk;
 }
 
+/**
+ * @brief Constructor
+ * @details Construct a B-Spline curve interpolation for the given knots and coefficients.
+ * 
+ * @param knotX Knot X coordinates
+ * @param coefs B-Spline coefficients
+ * @param degree Preferred degree of the interpolating spline. 
+ */
+BSplineCurve::BSplineCurve(std::vector<double> &knotX, std::vector<double> &coefs, int degree)
+{
+	// Store parameters
+	k = degree;
+
+	n = (int) knotX.size();
+
+	t = new double[knotX.size()];
+	std::copy(knotX.begin(), knotX.end(), t);
+
+	c = new double[coefs.size()];
+	std::copy(coefs.begin(), coefs.end(), c);
+}
+
+/**
+ * @brief Constructor
+ * @details Construct a B-Spline curve interpolation from a previously serialized BSplineCurve object
+ * 
+ * @param filename File to load 
+ */
+BSplineCurve::BSplineCurve(const std::string &filename)
+{
+	std::ifstream f;
+	f.open(filename, std::ios::binary);
+	if (!f.good()) {
+		std::stringstream s;
+		s << "Failed to open B-Spline curve cache file: " << filename;
+		throw std::runtime_error(s.str());
+	}
+
+	// Read spline from cache
+	f.read((char*) &n, sizeof(int));
+	t = new double[n];
+	for (int i = 0; i < n; i++) {
+		f.read((char*) &t[i], sizeof(double));
+	}
+
+	int nc;
+	f.read((char*) &nc, sizeof(int));
+	c = new double[nc];
+	for (int i = 0; i < nc; i++) {
+		f.read((char*) &c[i], sizeof(double));
+	}
+
+	f.read((char*) &k, sizeof(int));
+
+	f.close();
+}
+
 BSplineCurve::~BSplineCurve(void)
 {
 	// Free memory
 	delete[] t;
 	delete[] c;
+}
+
+/**
+ * @brief Knot X coordinates
+ * @return Knot X coordinates
+ */
+std::vector<double> BSplineCurve::knotX() 
+{
+	std::vector<double> knotX;
+	knotX.assign(t, t + n);
+	return knotX;
+}
+
+/**
+ * @brief Coefficients
+ * @return Coefficients
+ */
+std::vector<double> BSplineCurve::coefs() 
+{
+	std::vector<double> coefs;
+	coefs.assign(c, c + n);
+	return coefs;
+}	
+
+/**
+ * @brief Degree
+ * @return Degree
+ */
+int BSplineCurve::degree()
+{
+	return k;
+}
+
+/**
+ * @brief Serialize the BSplineCurve object
+ * 
+ * @param filename Destination file
+ */
+void BSplineCurve::serialize(const std::string &filename)
+{
+	std::ofstream f;
+	f.open(filename, std::ios::binary);
+
+	f.write((char*) &n, sizeof(int));
+	for (int i = 0; i < n; i++) {
+		f.write((char*) &t[i], sizeof(double));
+	}
+
+	f.write((char*) &n, sizeof(int));
+	for (int i = 0; i < n; i++) {
+		f.write((char*) &c[i], sizeof(double));
+	}
+
+	f.write((char*) &k, sizeof(int));
+
+	f.close();
 }
 
 /**

@@ -24,6 +24,7 @@
 #define BSPLINE_SURFACE_H
 
 #include <vector>
+#include <string>
 
 namespace fitpackpp
 {
@@ -39,8 +40,17 @@ class BSplineSurface
 {
 public:
 	BSplineSurface(std::vector<double> &x, std::vector<double> &y, std::vector<double> &z, int preferredDegree=3, double smoothing=0.0);
+	BSplineSurface(std::vector<double> &knotX, std::vector<double> &knotY, std::vector<double> &coefs, int degree);
+	BSplineSurface(const std::string &filename);
 
 	~BSplineSurface();
+
+	std::vector<double> knotX();
+	std::vector<double> knotY();
+	std::vector<double> coefs();
+	int degree();
+
+	void serialize(const std::string &filename);
 
 	double eval(double x, double y);
 	double der(double x, double y, int xOrder, int yOrder);

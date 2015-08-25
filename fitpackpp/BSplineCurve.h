@@ -24,6 +24,7 @@
 #define BSPLINE_CURVE_H
 
 #include <vector>
+#include <string>
 
 namespace fitpackpp
 {
@@ -39,8 +40,16 @@ class BSplineCurve
 {
 public:
 	BSplineCurve(std::vector<double> &x, std::vector<double> &y, int preferredDegree=3, double smoothing=0.0);
+	BSplineCurve(std::vector<double> &knotX, std::vector<double> &coefs, int degree);
+	BSplineCurve(const std::string &filename);
 
 	~BSplineCurve();
+
+	std::vector<double> knotX();
+	std::vector<double> coefs();
+	int degree();
+
+	void serialize(const std::string &filename);
 
 	double eval(double x);
 	double der(double x, int order=1);
