@@ -308,6 +308,7 @@ double BSplineSurface::eval(double x, double y)
 	int iwrk[2];
 	std::fill(iwrk, iwrk + kwrk, 0);
 	
+	// bispev clamps x and y to the available ranges.
 	int ier = 0;
 	bispev(tx, &nx, ty, &ny, c, &k, &k, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);
 	if (ier > 0) {
@@ -346,6 +347,13 @@ double BSplineSurface::der(double x, double y, int xOrder, int yOrder)
 	int kwrk = 2;
 	int iwrk[2];
 	std::fill(iwrk, iwrk + kwrk, 0);
+
+	// parder clamps x and y to the available ranges, but this results in non-zero derivatives in the exterior. 
+	// Therefore we perform an additional bound check here.
+	if (x < tx[0] || x > tx[nx - 1])
+		return 0.0;
+	if (y < ty[0] || y > ty[ny - 1])
+		return 0.0;
 
 	int ier = 0;
 	parder(tx, &nx, ty, &ny, c, &k, &k, &xOrder, &yOrder, &x, &m, &y, &m, &z, wrk, &lwrk, iwrk, &kwrk, &ier);

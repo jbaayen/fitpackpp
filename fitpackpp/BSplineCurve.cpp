@@ -238,6 +238,8 @@ double BSplineCurve::eval(double x)
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
 	int ier = 0;
+
+	// splev also evaluates points in the exterior
 	splev(t, &n, c, &k, &x, &y, &m, &e, &ier);
 	if (ier > 0) {
 		std::stringstream s;
@@ -271,6 +273,8 @@ double BSplineCurve::der(double x, int order)
 	int m = 1; // Evaluate a single point
 	int e = 0; // Don't clip argument to range
 	int ier = 0;
+
+	// splder also evaluates points in the exterior
 	splder(t, &n, c, &k, &order, &x, &y, &m, &e, wder, &ier);
 	if (ier > 0) {
 		std::stringstream s;
