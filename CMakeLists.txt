@@ -8,6 +8,10 @@ if(${CMAKE_Fortran_COMPILER} MATCHES "ifort.*")
     set(CMAKE_Fortran_FLAGS_DEBUG   "${CMAKE_Fortran_FLAGS} -fltconsistency")
 endif()
 
+if (CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
 set(fitpack_SRC
     fitpack/bispev.f
     fitpack/curfit.f
